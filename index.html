@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kor Cava</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Outfit','system-ui','sans-serif'] },
+          colors: {
+            surface: { 950:'#0a0a14', 900:'#111122', 800:'#1a1a2e', 700:'#24243e' },
+            cava: { 50:'#fdf2f4',100:'#fce7ea',200:'#f9d0d8',300:'#f4a9b8',400:'#f472b6',500:'#e04d6f',600:'#cc2d56',700:'#ab2046',800:'#8f1d3e',900:'#7a1b39' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    .card-scroll::-webkit-scrollbar{width:5px}
+    .card-scroll::-webkit-scrollbar-track{background:transparent}
+    .card-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:10px}
+    .card-scroll::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,0.14)}
+    .detail-scroll::-webkit-scrollbar{width:5px}
+    .detail-scroll::-webkit-scrollbar-track{background:transparent}
+    .detail-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.06);border-radius:10px}
+    .stagger-card{opacity:0;transform:translateY(16px)}
+    .stagger-card.visible{animation:cardIn 0.5s cubic-bezier(0.16,1,0.3,1) forwards;animation-delay:calc(var(--i)*60ms)}
+    @keyframes cardIn{to{opacity:1;transform:translateY(0)}}
+    .song-card{transition:all 0.3s cubic-bezier(0.16,1,0.3,1)}
+    .song-card:hover{background:rgba(255,255,255,0.06)}
+    .song-card:active{transform:scale(0.98)}
+    .song-card.selected{background:linear-gradient(135deg,#cc2d56,#e04d6f);border-color:transparent;box-shadow:0 8px 32px -4px rgba(204,45,86,0.4),0 2px 8px -2px rgba(204,45,86,0.2)}
+    .song-card.selected .song-title{color:#fff}
+    .song-card.selected .badge{background:rgba(255,255,255,0.18)!important;color:#fff!important;border-color:rgba(255,255,255,0.1)!important}
+    .song-card.selected .file-count-num{color:rgba(255,255,255,0.7)}
+    .song-card.selected .card-chevron{color:rgba(255,255,255,0.5)}
+    .file-item{transition:all 0.2s cubic-bezier(0.16,1,0.3,1)}
+    .file-item:hover{background:rgba(255,255,255,0.08);transform:translateX(4px)}
+    .file-item:active{transform:translateX(4px) scale(0.98)}
+    .filter-chip{transition:all 0.25s cubic-bezier(0.16,1,0.3,1)}
+    .filter-chip:active{transform:scale(0.95)}
+    .search-wrap{transition:all 0.3s cubic-bezier(0.16,1,0.3,1)}
+    .search-wrap:focus-within{border-color:rgba(204,45,86,0.4);box-shadow:0 0 0 3px rgba(204,45,86,0.08),0 1px 2px rgba(0,0,0,0.1)}
+    .dropbox-link{transition:all 0.25s cubic-bezier(0.16,1,0.3,1)}
+    .dropbox-link:hover{background:rgba(204,45,86,0.25);color:#fff}
+    .dropbox-link:active{transform:scale(0.97)}
+    .detail-enter{animation:detailFade 0.4s cubic-bezier(0.16,1,0.3,1) forwards}
+    @keyframes detailFade{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:translateX(0)}}
+    .welcome-icon-wrap{animation:gentlePulse 3s ease-in-out infinite}
+    @keyframes gentlePulse{0%,100%{opacity:0.15;transform:scale(1)}50%{opacity:0.22;transform:scale(1.05)}}
+    @keyframes bob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(6px)}}
+    .noise-overlay{position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:0.025;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+    .panel-divider{width:1px;background:linear-gradient(180deg,transparent 0%,rgba(255,255,255,0.06) 15%,rgba(255,255,255,0.06) 85%,transparent 100%)}
+    .section-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+    .mobile-detail-overlay{position:fixed;inset:0;z-index:50;background:#0a0a14;transform:translateX(100%);transition:transform 0.35s cubic-bezier(0.16,1,0.3,1);overflow-y:auto}
+    .mobile-detail-overlay.open{transform:translateX(0)}
+    .badge{transition:all 0.2s cubic-bezier(0.16,1,0.3,1)}
+    .badge:hover{transform:scale(1.05)}
+  </style>
+</head>
+<body class="font-sans antialiased bg-surface-950 text-white overflow-x-hidden">
+<div class="noise-overlay"></div>
+
+<!-- HERO -->
+<section class="relative min-h-[70dvh] md:min-h-[85dvh] flex items-center justify-center overflow-hidden" id="hero">
+  <div class="absolute inset-0 z-0">
+    <img id="heroImg" src="img/hero.jpg" alt="Cava kor"
+         class="w-full h-full object-cover" style="height:120%;transform:scale(1.1);will-change:transform;">
+    <div class="absolute inset-0 bg-gradient-to-b from-surface-950/30 via-surface-950/60 to-surface-950"></div>
+  </div>
+  <div class="relative z-10 text-center px-6">
+    <h1 id="heroTitle" class="text-5xl md:text-8xl font-extrabold tracking-tighter leading-none">
+      Kor <span class="text-cava-500">Cava</span>
+    </h1>
+    <p id="heroSub" class="mt-3 text-lg md:text-xl text-white/40 font-light tracking-wide">
+      Repertoar og ressurser i Dropbox
+    </p>
+  </div>
+  <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 text-white/20 text-sm" id="scrollHint"
+       style="animation:bob 2s ease-in-out infinite">
+    <span class="font-light">Scroll ned</span>
+    <i class="ph ph-caret-down text-lg"></i>
+  </div>
+</section>
+
+<!-- DASHBOARD (desktop) -->
+<section class="hidden md:flex" id="dashboard" style="position:sticky;top:0;min-height:100dvh;">
+  <div class="flex-[3] flex flex-col py-6 pl-6 pr-3 max-h-[100dvh] overflow-hidden">
+    <div class="flex items-center gap-3 mb-4 flex-shrink-0">
+      <div class="search-wrap flex-1 flex items-center gap-2.5 bg-white/[0.04] border border-white/[0.06] rounded-xl px-4 py-2.5">
+        <i class="ph ph-magnifying-glass text-white/25 text-base"></i>
+        <input type="text" placeholder="S&#xf8;k i repertoaret..."
+               class="bg-transparent border-none outline-none text-white text-sm w-full placeholder:text-white/25 font-light"
+               id="searchInput">
+      </div>
+      <div class="flex bg-white/[0.04] rounded-xl p-1 flex-shrink-0 border border-white/[0.04]">
+        <button class="tab-btn px-4 py-2 rounded-lg text-xs font-semibold transition-all" id="tabLaater" onclick="switchTab('laater')">Repertoar</button>
+        <button class="tab-btn px-4 py-2 rounded-lg text-xs font-semibold transition-all" id="tabJul" onclick="switchTab('jul')">Julesanger</button>
+      </div>
+    </div>
+    <div class="flex items-center gap-2 mb-4 flex-shrink-0">
+      <button class="filter-chip text-xs font-medium px-3 py-1.5 rounded-lg border" data-filter="noter" onclick="toggleFilter('noter')">
+        <i class="ph ph-music-notes text-[11px] mr-1"></i>Noter</button>
+      <button class="filter-chip text-xs font-medium px-3 py-1.5 rounded-lg border" data-filter="lyd" onclick="toggleFilter('lyd')">
+        <i class="ph ph-speaker-high text-[11px] mr-1"></i>&#xd8;vingsfiler</button>
+      <button class="filter-chip text-xs font-medium px-3 py-1.5 rounded-lg border" data-filter="tekst" onclick="toggleFilter('tekst')">
+        <i class="ph ph-text-aa text-[11px] mr-1"></i>Tekst</button>
+      <span class="ml-auto text-[11px] text-white/15 font-light tabular-nums" id="songCount"></span>
+    </div>
+    <div class="card-scroll flex-1 overflow-y-auto flex flex-col gap-1.5 pr-2" id="cardList"></div>
+    <div class="hidden flex-1 items-center justify-center text-center flex-col" id="emptyState">
+      <i class="ph ph-music-notes-simple text-4xl text-white/10 mb-3"></i>
+      <p class="text-sm text-white/30">Ingen l&#xe5;ter funnet</p>
+      <p class="text-xs text-white/15 mt-1">Pr&#xf8;v et annet s&#xf8;keord eller fjern filtre</p>
+    </div>
+  </div>
+  <div class="panel-divider flex-shrink-0"></div>
+  <div class="flex-[2] flex flex-col max-h-[100dvh] overflow-hidden" id="rightPanel">
+    <div class="flex-1 flex flex-col items-center justify-center text-center px-8" id="welcomeState">
+      <div class="welcome-icon-wrap mb-6"><i class="ph ph-music-notes-simple text-6xl text-white/15"></i></div>
+      <h2 class="text-xl font-bold text-white/40 mb-2">Velg en l&#xe5;t</h2>
+      <p class="text-sm text-white/20 max-w-[240px] leading-relaxed font-light">Klikk p&#xe5; en l&#xe5;t i listen til venstre for &#xe5; se noter, &#xf8;vingsfiler og tekster.</p>
+    </div>
+    <div class="hidden detail-scroll flex-1 overflow-y-auto p-6 flex-col" id="detailState"></div>
+  </div>
+</section>
+
+<!-- MOBILE LAYOUT -->
+<section class="md:hidden" id="mobileDashboard">
+  <div class="px-4 pt-4 pb-3 bg-surface-950 sticky top-0 z-30">
+    <div class="flex items-center gap-2 mb-3">
+      <div class="search-wrap flex-1 flex items-center gap-2 bg-white/[0.04] border border-white/[0.06] rounded-xl px-3 py-2">
+        <i class="ph ph-magnifying-glass text-white/25 text-sm"></i>
+        <input type="text" placeholder="S&#xf8;k..."
+               class="bg-transparent border-none outline-none text-white text-sm w-full placeholder:text-white/25 font-light"
+               id="searchInputMobile">
+      </div>
+      <div class="flex bg-white/[0.04] rounded-lg p-0.5 flex-shrink-0 border border-white/[0.04]">
+        <button class="tab-btn-mobile px-3 py-1.5 rounded-md text-[11px] font-semibold transition-all" id="tabLaaterMobile" onclick="switchTab('laater')">Repertoar</button>
+        <button class="tab-btn-mobile px-3 py-1.5 rounded-md text-[11px] font-semibold transition-all" id="tabJulMobile" onclick="switchTab('jul')">Jul</button>
+      </div>
+    </div>
+    <div class="flex items-center gap-1.5">
+      <button class="filter-chip text-[10px] font-medium px-2.5 py-1 rounded-lg border" data-filter-m="noter" onclick="toggleFilter('noter')">
+        <i class="ph ph-music-notes text-[9px] mr-0.5"></i>Noter</button>
+      <button class="filter-chip text-[10px] font-medium px-2.5 py-1 rounded-lg border" data-filter-m="lyd" onclick="toggleFilter('lyd')">
+        <i class="ph ph-speaker-high text-[9px] mr-0.5"></i>&#xd8;ving</button>
+      <button class="filter-chip text-[10px] font-medium px-2.5 py-1 rounded-lg border" data-filter-m="tekst" onclick="toggleFilter('tekst')">
+        <i class="ph ph-text-aa text-[9px] mr-0.5"></i>Tekst</button>
+      <span class="ml-auto text-[10px] text-white/15 tabular-nums" id="songCountMobile"></span>
+    </div>
+  </div>
+  <div class="px-4 pb-6 flex flex-col gap-1.5" id="cardListMobile"></div>
+  <div class="hidden px-4 py-16 text-center" id="emptyStateMobile">
+    <i class="ph ph-music-notes-simple text-4xl text-white/10 mb-3 block"></i>
+    <p class="text-sm text-white/30">Ingen l&#xe5;ter funnet</p>
+  </div>
+</section>
+
+<!-- Mobile detail overlay -->
+<div class="mobile-detail-overlay" id="mobileDetail">
+  <div class="sticky top-0 z-10 bg-surface-950/90 backdrop-blur-xl px-4 py-3 flex items-center gap-3 border-b border-white/[0.04]">
+    <button onclick="closeMobileDetail()" class="text-white/50 hover:text-white transition-colors">
+      <i class="ph ph-arrow-left text-xl"></i>
+    </button>
+    <span class="text-sm font-semibold text-white/70 truncate" id="mobileDetailTitle"></span>
+  </div>
+  <div class="p-5" id="mobileDetailContent"></div>
+</div>
+
+<footer class="border-t border-white/[0.04] py-8 text-center text-xs text-white/15">
+  <p>Cava Korforening &#183; Repertoaroversikt &#183; Oppdatert mars 2026</p>
+</footer>
+
+<script>
+var RAW = {"l":[["5 fine frøkner",["Tekst - 5 fine frøkner.pdf","Tekst - 5 fine frøkner- på Berganiiiese.pdf","Sopran kanon - 5 fine frøkner.mp3","Alt kanon - 5 fine frøkner.mp3","5 fine frøkner - alle - omarrangert - 22.05.17, 13.59.mp3","Alle stemmer - 5 fine frøkner .m4a","Alt1 - 5 fine frøkner.m4a","Alt2 - 5 fine frøkner.m4a","Sop1 - 5 fine frøkner.m4a","Sop2 - 5 fine frøkner.m4a","Fem fine frøkner ALT 2.mp3","Fem fine frøkner ALT 1 a + 1b.mp3","Fem fine frøkner SOP 2.mp3","Fem fine frøkner SOP 1a + 1b.mp3","Fem fine frøkner ALLE.mp3","Fem fine frøkner ALT 1 a + 1b (1).mp3","Fem fine frøkner-CAVA - oppdatert 28mars.pdf"]],["_ALLSANG",["Allsang og generell god stemning.pdf","Sønnavindsvalsen.pdf","Vise for gærne jinter.pdf","Allsang, seniorsenteret.pdf","Menuett i Mai.pdf","Sommernatt ved fjorden.pdf","Mitt hjerte er ditt.pdf"]],["A Natural Woman",["Noter - Natural Woman.pdf","Sop2 - A Natural Woman.mp3","Alle stemmer - Natural Woman.m4a","Sop1 - Natural woman.mp3","Alt2 - Natural woman.mp3","Sop1 - A Natural Woman.mp3","Alt1 - solo - A Natural Woman.mp3","Natural woman alle m:solist.mp3","Natural woman alle u:solist.mp3","Natural woman ALT1:sop2 (midtstemmen).mp3"]],["Ain't No Other Man",["Alle stemmer - Ain't no other Man.m4a","Noter - Ain't no other man.pdf","Ain't no other man- CAVAstyle.pdf"]],["Aliens (Her er jeg)",["Tekst - Aliens (her er jeg).pdf","Alle stemmer - Aliens (her er jeg).mp3","Alt1 - Aliens (her er jeg).mp3","Alt2 - Aliens (her er jeg).mp3","Sop1a - Aliens (her er jeg).mp3","Sop1b - Aliens (her er jeg).mp3","Sop2 - Aliens (her er jeg).mp3","Aliens. Alle. 07.05.18.m4a"]],["All About That Bass",["All about that bass SOP1 m_alle.mp3","All about that bass - SOP 1.mp3","All about that bass - SOP 2.mp3","All about that bass - ALT 2.mp3","Alle stemmer - All about that bass.mp3","Alt1 - All about that bass.mp3","All about that bass ALT 1 m:alle.mp3","All about that bass ALT 2 m:alle.mp3","All about that bass SOP2 m:alle.mp3","All about that bass - ALT 1.mp3","All about that bass.pdf","All about that bass ALT 1 m-alle.mp3","All about that bass SOP2 m-alle.mp3","All about that bass - alle stemmer.mp3","All about that bass ALT 2 m-alle.mp3"]],["All That Jazz",["All that jazz - Alt2.mp3","All that jazz - Sop1.mp3","All that  jazz - Alt 1.mp3","All that jazz - Sop2.mp3","All that jazz - Alle.mp3","All that jazz - partitur.pdf","all_that_jazz_noter.pdf"]],["All You Need Is Love",["Noter - All you need is love.pdf","All you need is love- alle.mp3","All you need is love- Alt 1.mp3","All you need is love- Alt 2.mp3","All you need is love- Sopran 1.mp3","Noter-All you need is love- riktig versjon.pdf","All you need is love- Sopran 2.mp3","All You Need Hele sop.m4a","All you need is love.pdf"]],["Angel",[]],["Baby You're So Cool",["Alle stemmer - Baby, you're so cool.mp3","Alt1 - Baby, you're so cool.mp3","Alt2 - Baby, you're so cool.mp3","Noter - Baby You're so Cool.pdf","Sop1 - Baby, you're so cool.mp3","Sop2 - Baby, you're so cool.mp3","Baby, You're so Cool.m4a"]],["Backbeat",["Backbeat Seminar.m4a"]],["Barnesangmedley",["Alle stemmer - Barnesangmashup.m4a","Alt2 - Barnesangmashup- Taktarstdel med telling.m4a","Sop1a+b - Barnesangmashup - Taktartsdel med telling.m4a","Alle stemmer - Barnesangmashup - Taktartsdel med telling.m4a","Alt1 - Barnesangmashup - Taktartsdel med telling.m4a","Sop2 - Barnesangmashup - Taktartsdel med telling.m4a","Alt1 - Barnesangmashup - uten prat.m4a","Alt1 - Barnesangmashup.m4a","Alt2 - Barnesangmashup.m4a","Sop1a - Barnesangmashup.m4a","Sop1b - Barnesangmashup.m4a","Sop2 - Barnesangmashup.m4a"]],["Be My Lover",["Alle stemmer - Be my lover.mp3","Alt1 - Be my lover.mp3","Alt 2 - Be my lover.mp3","Form - Be my lover.pdf","Solist - Be my lover.mp3","Sop1 - Be my lover.m4a","Ressursinfo Be my lover.docx","Be my lover sopran 2.mp3","Be my lover 14.01.19.m4a","Be my Lover 04.02.2019.m4a","Be my Lover 25.03.19.m4a","Be my lover.m4a","Be my lover form.pdf","Be my lover til cava.mp3","Be my lover Sop 1.m4a","Be my lover alt 1.mp3","Be my lover alt 2.mp3","Be my lover solist.mp3","Be my lover alt 2 (1).mp3"]],["Big Spender",["Noter - Big Spender.pdf","Alle stemmer - Big Spender - Seminar.m4a","Big Spender fullstendig versjon.pdf","Big Spender ALT2.mp3","Big Spender ALT1.mp3","Big Spender ALLE.mp3","Big Spender SOP2.mp3","Big Spender SOP1.mp3","Big Spender SOP2 m:høy lyd.mp3","Big Spender.pdf"]],["Boogie Woogie Bugle Boy",["Noter - Boogie Woogie Bugle Boy (korblekke).pdf","Sop1a - Boogie Woogie Bugle Boy.mp3","Sop1b - Boogie Woogie Bugle Boy.mp3","Sop2 - Boogie Woogie Bugle Boy.mp3","Alt - Boogie Woogie Bugle Boy.mp3","Alt - boogie in boogie rytmn.m4a","Boogie Woogie Bugle Boy (korblekke).pdf"]],["Both Sides Now",["Alt1 - Both Sides Now.m4a","Alle stemmer - Both Sides Now + metronom.m4a","Alt2 - Both Sides Now.m4a","Sop1 - Both Sides Now.m4a","Sop2 - Both Sides Now.m4a","Alle stemmer - Both Sides Now.m4a"]],["Boys With Strawberry Sauce",["Noter - Boys  With Strawberry Sauce.pdf","Alt1 - Boys With Strawberry Sauce.mp3","Alt2 - Boys With Strawberry Sauce.mp3","Sop1 - Boys With Strawberry Sauce.mp3","Sop2 - Boys With Strawberry Sauce.mp3","Sop2 - Boys With Strawberry Sauce (2).mp3","Boys_With_Strawberry_Sauce.pdf"]],["Call Your Girlfriend",["Alle stemmer - Call your girlfriend.mp3","Alt1-2 - Call your girlfriend.mp3","Alt1-1 - Call your girlfriend.mp3","Alt2 - Call your girlfriendl.mp3","Solist - Call your girlfriend.mp3","Sop1-2 - Call your girlfriend.mp3","Sop1-1 - Call your girlfriend.mp3","Sop2 - Call your girlfriend.mp3","Ressursinfo Call your girlfriend.docx","Call your girlfriend.m4a","Call your girlfriend sop 2.mp3","Call your girlfriend alle stemmer.mp3","Call your girlfriend alt 1 - 2.mp3","Call your girlfriend alt 1-1.mp3","Call your girlfriend alt 2.mp3","Call your girlfriend solist opp.mp3","Call your girlfriend sop 1-1.mp3","Call your girlfriend sop 1-2.mp3"]],["Candyman",["Alt 1 - CandyMan med Perk.mp3","Alt1 - Candy Man.mp3","Alt2 - Candy Man.mp3","Solo - Candy Man.mp3","Solo2 - Candy Man.mp3","Solo3 - Candy Man.mp3","Sop2 (alt1) - Candy Man.mp3"]],["Carry You Home (Fato)",["Fato-Carry You Home.docx"]],["CAVA-medley",["Alt1 - stay til everybody.mp3","Alt 2 stay til everybody.mp3","Alt2 - Say You'll be There_B (OBS blir høyt).mp3","Alt1 - Say You'll be There_B (OBS blir høyt).mp3","Solist - stay til everybody.mp3","Solist Say You'll be There_B (OBS blir høyt).mp3","Sop1 - stay til everybody.mp3","Sop1 - Say You'll be There_B (OBS blir høyt).mp3","Sop2- Driving home for Last Christmas.mp3","Sop2 - stay til everybody.mp3","Sop2 Say You'll be There_B (OBS blir høyt).mp3","Medley del 1 (kopi).docx","Say you'll be there:Bootilicious m perk.mp3","Stay another day:Don't let go:Mmm-bop:everybody.mp3","Say you'll be there:Bootilicious u perk.mp3","Overgang En Vouge:Mmmbop.mp3","Cava Medley - halv tone opp.m4a","Cava Medley - Original Toneart.m4a"]],["Celebration",["Alt1 - Celebration.mp3","Alle stemmer - Celebration.mp3","Alt2 - Celebration.mp3","Sop1 - Celebration.mp3","Celebration - Full Score.pdf","Celebration - ALTO 2 .pdf","Celebration - SOPRANO 2.pdf","Celebration - ALTO 1.pdf","Celebration - SOPRANO 1.pdf","Sop2 - Celebration.mp3"]],["Close To You",["Alt1 - Close to You.mp3","Alt2 - Close to You.mp3","Gullta1 - Close to You.mp3","Gutta2 - Close to You.mp3","Sop1 - Close to You.mp3","Sop2 - Close to You.mp3"]],["Damned (Phone Joan)",["Damned med uthevet kor.mp3","Damned med kor.mp3","Alt1 - Damned.mp3","Sop1 - Damned.mp3","Sop2 - Damned.mp3"]],["Daughters",["Daugthers ALT1.mp3","Daugthers ALLE.mp3","Daugthers ALT2.mp3","Daugthers GRUPPE lys.mp3","Daugthers GRUPPE mørk.mp3","Daugthers SOP1.mp3","Daugthers SOP2.mp3","Ressursinfo Daughters.docx","Daughters.m4a","Daughters alt1.mp3"]],["Den Fyrste Song",["2.sop Komp Den Fyrste Song (vers3&4).m4a"]],["Diamonds",["Stemme1 - Diamonds.mp3","Stemme2 - Diamonds.mp3","Stemme3 - Diamonds.mp3","Stemme4 - Diamonds.mp3","Alle stemmer - DIamonds.mp3"]],["Dog Days Are Over",["Alt2 - Dog days are over.mp3","Noter - Dog days are over.pdf","Dog Days 1.sop Seminar 19.04.2015.m4a","Dog days Heidi.3ga","Dog Days Sop 2 april 2015.m4a","Dog Days sop 2b (går ned) mai 2015.m4a","Dog days.m4a","Dog Days alle (uthevet 1.alt).m4a","Dog days 2.alt.mp3"]],["Don't Speak",["Alle stemmer - Don't speak.mp3","Sop2 - Don't speak.mp3","Alt 1- Don't speak -1.mp3","Alt 2- Don't speak.mp3","Sopran 1- Don't speak  (1).mp3","Ressursinfo Don't speak.docx","Don't Speak 11.03.2019.m4a","Don't Speak 25.03.2019.m4a","Alle- Don't speak.mp3","Sopran 2- Don't speak.mp3"]],["Fade Away",["Sop2 - Fade Away.mp3","Sop1-2 - Fade away.mp3","Sop1-1 - Fade Away.mp3","Alt1-2 - Fade Away.mp3","Alt1-1 - Fade Away.mp3","Fade Away 01.04.2019.m4a","Fade Away (lang).m4a"]],["Fever",["Teskt - Fever, solistdel.pdf","Noter - Fever.pdf","Sop2 - Fever, uten metronom.mp3","Sop2 - Fever, med melodi uten metronom.mp3","Sop2 - Fever, med melodi og metronom.mp3","Fever 1. alt .m4a","Fever tom 3 Vers.m4a","Fever Sop2.m4a","Fever sop 2 og melodi med metronom.mp3","Fever sop 2 og melodi uten metronom.mp3","Fever sop 2 uten metronom.mp3","Fever.pdf","Fever tekst, solistdel.pdf"]],["Floden",["Alle stemmer - Floden.mars.m4a","Alle stemmer - Floden - Bra Opptak.m4a","Midtstemme - Floden, vers.m4a"]],["Frida Strået",["Frida Strå N-a-o-snu Sop.m4a","Frida Strået Den Den Den Den (kopi).m4a","Frida Strået Hele.m4a","Frida Strået La La.m4a","Frida Strået Refreng Alt + Sop (kopi).m4a"]],["Fångad av en Stormvind",["Tekst Sop1 - Fångad av en stormvind.pdf","Alle Stemmer - Fångad av en stormvind.mp3","Alle stemmer - Fångad av en stormvind_ BL.m4a","Fångad til CAVA alt 2.mp3","Fångad text Alt .txt","Fångad Sop 1","Fångard S1.jpg","Fångard S2.jpg","Fångard S3.jpg","Fångard S4.jpg","Fångard S5.jpg","Fångard S6.jpg","Fångard S7.jpg","Fångad.m4a","Fångad 04.02.2019.m4a","Fångad 25.03.2019.m4a","Fångad av en stormvind sop1.pdf"]],["Føkk Lunsj",["Noter - FøkkLunsj.pdf","Sop1 - FøkkLunsj, 1-64.aiff","Sop1(nede) - FøkkLunsj, Takt 65-113.mp3","Sop1(oppe) - FøkkLunsj, Takt. 65-113.mp3","Føkk lunsj Alt 1 - seminar.m4a","FøkkLunsj.pdf"]],["Girl On Fire",["Alle stemmer - Girl on fire.mp3","Alt1 - Girl on fire.mp3","Alt2 - Girl on fire.mp3","Sop1 - Girl on fire.mp3","Sop2 - Girl on fire.mp3","Girl_on_Fire_sop2.pdf","Ressursinfo Girl on fire.docx","Girl On Fire 18.04.15.m4a","Girl on fire Alt 1.mp3","Girl on fire Alt 2.mp3","Girl on fire Sopran 1.mp3","Girl on fire Sopran 2.mp3","Girl on fire ALLE.mp3"]],["Girlband - Boyband Medley",[]],["Girls Just Wanna Have Fun",["Alt1 - Girls just wanna have fun.mp3","Alt2 - Girls just wanna have fun.mp3","Alle stemmer - Girls just wanna have fun.mp3","Sop1 - Girls just wanna have fun.mp3","Sop2 - Girls just wanna have fun.mp3","Girls Just Wanna Have Fun.m4a","Girls Just Wanna Run.m4a","Girls Wanna Have Fun - Blanda.m4a"]],["Girls Just Wanna Run The World",["Hele Girls just wanna run the world.mp3","Alt1- Girls just wanna run the world.mp3","Alt2 - Girls just wanna run the world.mp3","Noter - Run the world (girls).pdf","Overgang - Girls just wanna run the world.mp3","Sop1- Girls just wanna run the world.mp3","Sopr2- Girls just wanna run the world.mp3","TALEKOR - Girls just wanna run the world.pdf","Talekor (uten markeringer) - Girls just wanna run the world.docx","girls, run the world .pdf","Talekor (uten markeringer).docx"]],["Go To Sleep You Little Baby",["Alt - Go to sleep you little baby.wav"]],["God Don't Leave Me",["God Dont Leave Me sop 1b takt 43.m4a"]],["Gods Great Dust",["Gods great dust @ KLP2.m4a"]],["Halo",["Alle stemmer - Halo.mp3","Alt - Halo.mp3","Kun komp - Halo.mp3","Sop1 - Halo.mp3","Sop1_intro - Halo.mp3","Sop2 - Halo.mp3","Alle stemmer, uten solist - Halo.mp3","Halo - Seminar 12.06.2021.m4a","Halo.pdf"]],["Hello",["Alle stemmer - Hello.mp3","Sop2 - Hello.mp3"]],["Here Comes The Sun",["Alt2 - Here comes the sun.mp3","Alle stemmer - Here comes the sun.mp3","Alt1 - Here comes the sun.mp3","Sop1a+b - Here comes the sun.mp3","Sop1b - Here comes the sun.mp3","Sop2 - Here comes the sun.mp3","Alle stemmer - HereComes the sun_med intro.mp3","Here Comes The Sun alt2.pdf","Here Comes The Sun ALLE.mp3","Here Comes The Sun 15.10.18.m4a"]],["Hit 'Em Up Style",["Alle stemmer - Hit em up style.mp3","Alt 1 - Hit em up style.mp3","Alt2 - Hit em up style.mp3","Noter - Sop1 - Hit em up Style.pdf","Solist - Hit em up style.mp3","Sop1 - Hit em up style.mp3","Sop2 - Hit em up style.m4a","Sop2 - Hit em up style.mp3","Alle stemmer - Hit em up style uten solist.mp3","Hit em up Style arr - ALTO 1 .pdf","Hit em up Style arr - SOPRANO 2.pdf","Hit em up Style arr - SOLO .pdf","Hit em up Style arr - Full Score.pdf","Hit em up Style arr - ALTO 2.pdf","Hit em up Style arr - SOPRANO 1 (Page 1).jpg","Hit em up Style arr - SOPRANO 1 (Page 2).jpg","Hit em up Style arr - SOPRANO 1 (Page 3).jpg","Hit em up Style arr - SOPRANO 1 (Page 4).jpg","Hit 'em up style 12.10.2020.m4a","Hit em up style sopran 2.mp3","Hit em up style uten solist.mp3","Hit em up style alle stemmer.mp3","Hit em up style alt 1.mp3","Hit em up style alt 2.mp3","Hit em up style solist.mp3","Hit em up style sopran 1.mp3"]],["Hit The Road Jack",["Alle stemmer - Hit the road Jack nr1.m4a"]],["Holding Out For A Hero",["Alt2 - Holding out for a hero.mp3","Alle stemmer - Holding out for a hero.mp3","Alt1 - Holding out for a hero.mp3","Instrumental - Holding out for a hero.mp3","Sop1 - Holding out for a hero.mp3","Sop2 - Holding out for a hero.mp3","Tekst - HOLDING OUT FOR A HERO.pdf"]],["Honey Pie",["Honey Pie, noter.pdf"]],["Human",["Human cava alle stemmer.mp3","Human cava alt 1.mp3","Human cava alt 2.mp3","Human cava sopran 1.mp3","Human cava sopran 2.mp3","Human arr - Alto Solo (1).pdf","Human arr - Alto (1).pdf","Human arr - Full Score (1).pdf","Human arr - SOPRANO 1 (1).pdf","Human arr - SOPRANO 2 (1).pdf","Human arr - Soprano Solo (1).pdf","Human - tekst.pdf"]],["Hyperballad",["Alle stemmer - Hyperballad.mp3","Alle stemmer - Hyperballad med lead.mp3","Hyperballad.mp3"]],["I Mine Drømmer",["Alle stemmer - I mine drømmer.mp3","Alt1 - I mine drømmer.mp3","Alt2 - I mine drømmer.mp3","Solist eller gruppe - I mine drømmer.mp3","Sop1 - I mine drømmer.mp3","Sop2 - I mine drømmer.mp3","I mine drømmer.m4a","I mine drømmer uthevet 2.sop.m4a","I mine drømmer 01.04.2019.m4a"]],["If I Were A Boy",["Alt1 -  If I were a boy.m4a","Alt2 - If I Were A Boy.mp3","Sop1 - If I were a boy.m4a","Stemmeinndeling2020 - If i were a boy.pdf","Stemmeinndeling - If I Were A Boy.pdf","Noter - If I were a boy.pdf","Alle stemmer - If I were a boy.mp3","Sop2b - If I were a boy.m4a","Sop2a nede - If I were a boy.mp3","Sop2a oppe - If I were a boy.mp3","If I were a boy, Cava-style.mp3","Sop2a nede_If I were a boy .mp3","Sop2a oppe_If I were a boy.mp3","If I were a boy - Sop1.m4a","1.Alt If I were a boy.m4a","If I Were A Boy - Alt2.mp3","If I were a boy. Sop 2 B.m4a","If I were a Boy - seminar.m4a","If I were a boy.m4a","If I were a boy 21.09.2020.m4a"]],["Intro (Vi har ei tulle - impro - Den fyrste song)",["Intro Sopran 2.mp3","Intro Sopran 1.mp3","Intro.mp3","Intro Alt 2.mp3","Intro Solist (Den fyrste song).mp3","Intro Alt 1.mp3"]],["Ja Vi Elsker",["Leela - Ja vi elsker.m4a","Else lyd ja vi elsker.WAV","Mari-Ann Lyd - Ja vi elsker.m4a","Marthe ja vi elsker.m4a","Runa Ja vi elsker lyd.m4a","Siri -Ja vi elsker.m4a","Anita.m4a","Hilde - Lyd.m4a","Toril lyd.m4a","Sissel - 1. del.m4a","Sissel - 2. del.m4a","Ja vi elsker Vivian.m4a"]],["Jag Kommer",["Jag kommer - 1.alt.mp3","Jag kommer - 2.alt.mp3","Jag kommer - 2.sopran.mp3","Jag kommer - 1.sopranA.mp3","Jag kommer ALLE.mp3","Jag kommer - 1.sopranB.mp3","Partitur Jag kommer.pdf","Jag kommer - Seminar 12.06.2021.m4a"]],["Janie's Got A Gun",["Janie solist mørk.m4a","Janie sopran 2.m4a","Janie alt 2.m4a","Janie solist lys.m4a","Janie's got a gun arr alle stemmer.m4a","Janie sopran 1.m4a","Janie alt 1.m4a","Janie 11 april.m4a","janie.m4a"]],["Jeg Vet",["Jeg vet- sopran 1.mp3","Jeg vet- forslag refr..mp3","Jeg vet- forslag refr. sopran 2.mp3","Jeg vet- alle stemmer m melodi.mp3","Jeg vet- alt.mp3","Jeg vet- forslag refr. sopran 1.mp3","Jeg vet- sopran 2.mp3","Jeg vet- alle stemmer minus mel..mp3","Jeg vet- forslag refr. alt.mp3"]],["La Meg Være Ung",["Alt 2- La meg være ung.mp3","Sopran 2- La meg være ung.mp3","Alt 1- La meg være ung.mp3","Sopran 1- La meg være ung.mp3","ALLE- La meg være ung.mp3","La meg være ung.pdf","La meg være ung - Seminar 12.06.2021.m4a","La meg være ung 14.06.2021.m4a","La meg være ung Jubileum.pdf"]],["Locomotion",["ALLE- Locomotion.mp3","Alt 2- Locomotion.mp3","Sopran 1- Locomotion.mp3","Alt 1- Locomotion.mp3","Sopran 2- Locomotion.mp3","Locomotion Sop1 TEKST.pdf","Locomotion 07.01.19..m4a","Locomotion 01.04.2019.m4a"]],["Love You Like That",["Love You Like That 28mars22.pdf","Love you like that SOP1.mp3","Love you like that SOP2.mp3","Love you like that ALLE.mp3","Love you like that ALT2.mp3","Love you like that ALT1.mp3"]],["Medley",["Backingtrack- CAVAmedley.mp3","HELE Cavamedley.mp3","Medley tekst.pdf","Medley - Alt 1.mp3","Medley - Sopran 2.mp3","Medley - Sopran 1.mp3","Medley, del 1- Alle.mp3","Medley - Alt 2.mp3","MEDLEY-DEL-1 - ALT 2.docx","MEDLEY-DEL-1 - SOLO.docx","MEDLEY DEL 1 _ alt 1.docx","Medley del 1 sop2.docx","Like a prayer. 2.ALT.mp3","Like a prayer. 1.SOPRAN.mp3","Girl:Ironic 1.ALT.mp3","Girl:Ironic 1.SOPRAN A.mp3","Like a prayer. 1.ALT.mp3","Girl:Ironic 2.SOPRAN.mp3","Like a prayer. 2.SOPRAN.mp3","Girl:Ironic 1.SOPRAN B.mp3","Medley, del 2- Alle.mp3","Girl:Ironic 2.ALT.mp3","Medley del 2 sop1A.m4a","Medley del 2 sop1B.m4a","Medley.pdf","say my name ny alt2.m4a"]],["Men Men",["Men Men alle.m4a","Men Men sop 2 sterkest.m4a"]],["Mercy",["mercy voice 3.mp3","mercy alle stemmer.mp3","Mercy_i_D.pdf","Mercy_i_D (1).pdf"]],["Mitt Lille Land",["Mitt lille land - Sop1.m4a","Mitt lille land til Cava - alle stemmer.m4a","Mitt lille land - Sop2.m4a","Mitt lille land - Alt 1.m4a","Mitt lille land - Alt 2.m4a"]],["My Heart Belongs To Daddy",["Alt 2 uthevet my heart.mp3","Sopran 2 uthevet my heart.mp3","Alt 1 uthevet my heart.mp3","Sopran 1 uthevet my heart.mp3","My heart belongs to daddy for CAVA.mp3","My heart belongs to daddy.pdf"]],["My Love Is Your Love",["My Love is Your Love 1.sop.m4a","My-love-is-your-love.pdf","My Love Is Your Love 20.08.18.m4a","My Love is Your Love. Alle. 03.09.18.m4a","My Love Is Your Love 1. alt 03.09.18.m4a","My Love alle SOP2.mp3","alt 2, your love is your love.m4a","sang 4 - alt 2, your love is your love.m4a"]],["Nature Boy",["nature_boy_a2.mp3","nature_boy_s1.mp3","nature_boy_a1.mp3","nature_boy_s2.mp3","nature_boy_noter.pdf"]],["Never Ever",["Solist C.mp3","Never ever alle (1).mp3","Solist B.mp3","Solist A.mp3","Never ever alle.mp3","2.soprano  korintro.mp3","Never ever, korintro ALLE.mp3","1.ALT korintro.mp3","1.sopran korintro.mp3","2.ALT korintro.mp3","Never ever 1.sop.mp3","Never ever 2.sop.mp3","Never ever 1.alt.mp3","Never ever 2.alt.mp3","NY sop 1.mp3","NY - alle stemmer.mp3","NY sop 2.mp3","NY alt 2.mp3","NY alt 1.mp3","Ressursinfo Never Ever.docx","Never Ever Sop1 klippet.mp3","Never ever .pdf","Never Ever 04.02.2019.m4a","Never Ever 11.03.2019.m4a","2.soprano korintro.mp3"]],["No Scrubs",["No Scrubs.m4a"]],["Not Fair",["Not Fair andrealt.mp3","Not Fair uten solister - seminar.m4a","Not Fair førstealt.mp3","Not Fair uten lead.mp3","Not Fair førstesopran.mp3","Not Fair andresopran.mp3","Not Fair alle uten metronom.mp3","Not Fair alle med metronom.mp3","Not fair og rumor has it sop2.pdf"]],["Nothing Else Matters",["Nothing else matters _ forkortet tekst.pdf","Nothing Else Matters 20130814 200420.m4a","Nothing Else Matters.aiff"]],["Only Hollerback Girl (In The World)",["LINN NY Only Hollerback Girl.mp3","BENTE NY Only Hollerback Girl .mp3","RINA NY Only Hollerback Girl.mp3","Only Hollerback Girl (in the world).mp3","Only hollerback girl BL.pdf","CATHRINE NY Only Hollerback Girl.mp3","CELINE NY Only Hollerback Girl.mp3"]],["Out Of Yourself",["OUT OF YOURSELF - fellesnummer.pdf","Out Of Yourself.m4a"]],["Perfekt",["Perfekt (CAVA) oppd. 4mai22.pdf","Perfekt - ALT1 a + b.mp3","Perfekt - ALT2.mp3","Perfekt - SOP1 + topp.mp3","Perfekt - SOP2.mp3","Perfekt - ALLE.mp3","Perfekt - CAAVA ALT1B.mp3","Perfekt - CAAVA ALT1.mp3"]],["Pure Shores",["Alt 2- Pure Shores.mp3","Sopran 2- Pure Shores.mp3","Pure Shores.mp3","Pure shores 01.04.2019.m4a","Pure Shores A1S1.m4a"]],["Rabbit Hole (Phone Joan)",["Rabbit Hole korarr.mp3"]],["Right Now",["Right_Now_S1.mp3","Right_Now_A2.mp3","Right_Now_S2.mp3","Right_Now_A1.mp3","Right_Now_noter.pdf"]],["Rolling In The Deep",["Rolling in the deep.mp3","Rolling in the deep.pdf","Rolling in the deep.m4a","Rolling Start.m4a","Rolling in the deep opptak.mp3"]],["Royals",["ROYALS_1.alt.mp3","ROYALS_2.sopran.mp3","ROYALS_1.sopran.mp3","ROYALS_alle.mp3","ROYALS_2.alt.mp3","ROYALS 2.0.pdf"]],["Rumour Has It",["Rumour has it.pdf","Not fair og rumor has it sop2.pdf"]],["Run The World (trommegroove)",["Run the world singback 124bpm(1).mp3","Run the world singback 100bpm.mp3","Run the world hele - V1.m4a","Run The World Hele Perk.m4a","Run the world m tromme.aiff","slutt 2 run the Word .wav","slutt run the Word .wav","slutt run the Word nr 3.wav","girls, run the world .pdf"]],["Runnin'",["Runnin Cava alt 1.mp3","Runnin Cava sopran 1.mp3","Runnin Cava alt 2.mp3","Runnin Cava  kun ins.mp3","Runnin Cava sopran 2.mp3","Runnin CAVA med ins.mp3","Runnin CAVA kun vokal.mp3","Runnin Cava sopran 2.m4a","Runnin CAVA ALTO 1.pdf","Runnin CAVA ALTO 2 .pdf","Runnin CAVA SOPRANO 1.pdf","Runnin CAVA SOPRANO 2.pdf","Runnin CAVA.pdf","Runnin Cava kun ins.mp3"]],["Rövarsången",["Rövarsången alt 1.mp3","Rövarsången alt 2.mp3","Rövarsången sopran 1.mp3","Rövarsången sopran 2.mp3","Rövarsången.mp3","Rövarsången - [Unnamed (treble staff)].pdf","Rövarsången - ALTO 1.pdf","Rövarsången - ALTO 2.pdf","Rövarsången - Full Score.pdf","Rövarsången - SOPRANO 1.pdf","Rövarsången - SOPRANO 2.pdf","Rövarsången.sib"]],["Set Me As A Seal",["Set_Me_As_A_Seal_A1.mp3","Set_Me_As_A_Seal_S2.mp3","Set_Me_As_A_Seal_A2.mp3","Set_Me_As_A_Seal_S1.mp3"]],["Sinnerman",["Sinnerman Alt 2 m tamburin.mp3","Sinnerman arr cava m tamburin.mp3","Sinnerman Alt 1 m tamburin.mp3","Sinnerman Slutt Sop2 Og Sop1.m4a","Sinnerman sopran 2 m tamburin.mp3","Sinnerman sopran 1 m tamburin.mp3","notater Sinnerman sop2.pdf"]],["Sir Duke",["Alt 1 Sir duke.mp3","Alt 2 Sir duke.mp3","Sop 1-2 Sir duke.mp3","Sop 2 Sir duke.mp3","Sir Duke til CAVA.mp3","Sop 1-1 Sir duke.mp3"]],["Slutte og Byne",["Slutte å byne.mp3","Slutte og byne- alt 2.pdf","Sopran 2- Slutte å byne.mp3","Slutte å byne- med metronom.mp3","Alt 2- Slutte å byne.mp3","Slutte og byne- sopran 2.pdf","Slutte og byne- alt 1.pdf","Alt 1- Slutte å byne.mp3","Sopran 1- Slutte å byne.mp3","Slutte og byne- sopran 1.pdf","Slutte og byne- partitur.pdf"]],["Soltrall",["Soltrall.m4a","Soltrall.pdf"]],["Stop This Train",["Stop this train sopran 1 - 2.m4a"]],["Sway",["Sway.pdf"]],["Talekor",["Talekor (uten markeringer).docx"]],["Teardrop",["Loop- Teardrop.mp3","Teardrop.mp3","Alt 2, Teardrop.mp3","Solist, Teardrop.mp3","Sopran 2, Teardrop.mp3","Sopran 1, Teardrop.mp3","Obligatstemme, Teardrop.mp3","Alt 1, Teardrop.mp3","Teardrop S1 del1 til 1_56.m4a","Teardrop S1 del2 1_56 til 3_17.m4a","Teardrop S1 del3 3_17 ut.m4a","Teardrop.pdf","Teardrop (Carina F. vikarsolist) 01.04.2019.m4a","Teardrop (Carina F. vikarsolist=) 01.04.2019.m4a"]],["The Boy From Ipanema",["The_Boy_From_Ipanema_S1.mp3","The_Boy_From_Ipanema_A.mp3","The_Boy_From_Ipanema_S2 (1).mp3","The_Boy_From_Ipanema_S2.mp3","The_Boy_From_Ipanema_S2 (2).mp3","The_Boy_From_Ipanema.pdf"]],["The Look",["She's got the look alt 1.mp3","She's got the look cava alle stemmer.mp3","She's got the look sop 2.mp3","She's got the look alt 2.mp3","She's got the look noter.pdf","She's got the look noter (1).pdf","The Look Sop1 TEKST.pdf","The Look 08.10.18.m4a","The Look 15.10.18 Opptak 2.m4a","The Look 15.10.18 Opptak 1.m4a","She's got the look sop 1.mp3"]],["The Second Time Around",["the_second_time_around_rask_del_alle.mp3","The_Second_Time_Around_hele_S2.mp3","The_Second_Time_Around_hele_A1.mp3","The_Second_Time_Around_hele_alle.mp3","The_Second_Time_Around_hele_S1.mp3","The_Second_Time_Around_hele_A2.mp3","the_second_time_around_rask_del_s2.mp3"]],["Think",["Think- alt 1.mp3","Think- sopran 1.mp3","Think- sopran 2.mp3","Think- alle.mp3","Think- alt 2.mp3","Think (fra øvelse) 17.09.18.m4a","Think sop2 (uten mod..).mp3","Think 25.03.2019-1.m4a","Think- tekst.pdf","Think - med solo.pdf"]],["Try Again",["Try again SOP 1 a og b.mp3","Try again SOP 1 b.mp3","Try again SOP 1 a.mp3","Try again SOP 2 a og b.mp3","Try again alle stemmer V2.mp3","Try again melodi a og b.mp3"]],["Vårsøg",["Vårsøg Hele.m4a","Vårsøg.pdf"]],["Wade In The Water",["wade_in_the_water_a1.mp3","wade_in_the_water.pdf","wade_in_the_water (1).pdf"]],["Whattaman",["WhattaMan.pdf"]],["When You're Good To Mama",["when_youre_good_to_mama_s1.mp3","when_youre_good_to_mama_a1.mp3","when_youre_good_to_mama_s2.mp3","when_youre_good_to_mama_solo.mp3","when_youre_good_to_mama_a2.mp3","when_youre_good_to_mama.pdf"]],["When Youre Good To Mama",["when_youre_good_to_mama.pdf"]],["You Don't Know Nothing",[]]],"j":[["All I Want For Christmas Is You",["Alt 1- All I want for christmas.mp3","Alt 2- All I want for christmas.mp3","Sopran 1- All I want for christmas.mp3","Sopran 2- All I want for christmas.mp3","Alle- All I want for christmas.mp3","All I want for Christmas is you- Alt 1.pdf","All I want for Christmas is you- Alt 2.pdf","All I want for Christmas is you- Sopran 1.pdf","All I want for Christmas is you- Sopran 2.pdf","All I want for Christmas is you- partitur.pdf","All I want for Christmas is you 03.11.2019.m4a","All I want for Christmas is you 11.10.2021.m4a","All I want for Christmas is you 15.11.2021.m4a","All I Want for X-mas.mp3","All I want for Christmas is you- Alt 2 (Page 1).jpg","All I want for Christmas is you- Alt 2 (Page 2).jpg","All I want for Christmas is you- Alt 2 (Page 3).jpg","All I want for Christmas is you- Alt 2 (Page 4).jpg"]],["Carol Of The Bells",["Carol of the bells SOP1.mp3","Carol of the bells SOP2.mp3","Carol of the bells ALT.mp3","Carol of the bells ALLE.mp3","Carol Of The Bells 2sop.m4a","carol of the bells med alle Alt2 .m4a","Carol of The Bells.pdf","Carol The Bells (Page 1).jpg","Carol The Bells (Page 2).jpg","Carol The Bells (Page 3).jpg","Carol The Bells (Page 4).jpg","03 - Carol of the bells.mp3","Carol of the Bells.m4a","Carol The Bells.pdf"]],["Carol of the Corona",[]],["Deilig er Jorden",["deilig Er jorden alt2.m4a","Deilig Er Jorden.m4a","Deilig er jorden midterste stemme.m4a","Deilig er jorden CAVA arr..mp3","deilig er jorden noter.url","Deilig er jorden CAVA (noter nov21).pdf","10 - Deilig er jorden.mp3"]],["Driving Home For Last Christmas",["Alt 1- Driving home for Last Christmas.mp3","Alt 2- Driving home for Last Christmas.mp3","Sopran 1- Driving home for Last Christmas.mp3","Sopran 2- Driving home for Last Christmas.mp3","Driving home for Last Christmas.mp3","Solist-Driving home for Last Christmas .mp3","Driving Home For Last Christmas.pdf","Driving home for Last Christmas - Alt1.pdf","Driving home for Last Christmas - Alt2.pdf","Driving home for Last Christmas - Full Score.pdf","Driving home for Last Christmas - Solist .pdf","Driving home for Last Christmas - Sop1.pdf","Driving home for Last Christmas - Sop2.pdf"]],["God Jul Igjen",["God jul igjen - alt 1.mp3","God jul igjen - alt 2.mp3","God jul igjen - sop1a.mp3","God jul igjen - sop1b.mp3","God jul igjen - sop2.mp3","God jul igjen.mp3","God jul igjen - Alt1 (1).pdf","God jul igjen - Alt1.pdf","God jul igjen - Alt2.pdf","God jul igjen - Sop 1a.pdf","God jul igjen - Sop1b.pdf","God jul igjen - Sop2.pdf","God jul igjen - Full Score.pdf","God Jul Igjen.m4a"]],["God Rest Ye Merry Gentlemen",["God rest ye merry gentlemen.pdf"]],["Hard To Be A Nissemann",["It's hard to be a nissemann alle stemmer.mp3","It's hard to be a nissemann alt 1.mp3","It's hard to be a nissemann alt 2.mp3","It's hard to be a nissemann sopran 1.mp3","It's hard to be a nissemann sopran 2.mp3","It's hard to be a nissemann - ALTO 1.pdf","It's hard to be a nissemann - ALTO 2.pdf","It's hard to be a nissemann - Full Score.pdf","It's hard to be a nissemann - SOPRANO 1.pdf","It's hard to be a nissemann - SOPRANO 2.pdf","Nissemann.m4a"]],["Hark! The Herald Angels Sing",["Hark! The herald angles sing.pdf"]],["Home For Christmas",["Home For Christmas alt 2.mp3","Home For Christmas sop 1.mp3","Home For Christmas til Cava.mp3","Home For Christmas sop 2.mp3","Home For Christmas alt 1.mp3","Home for christmas Alt 2 obs blir høy.mp3"]],["It's Beginning To Look Like Christmas",["It`s beginning to look ALT1.mp3","It`s beginning to look ALT2.mp3","It`s beginning to look SOP1.mp3","It`s beginning to look SOP2.mp3","It`s beginning to look ALLE.mp3","Its beginning to look like Christmas.pdf","it's beginning to look like x-mas (sop 1).aiff","it beginning med piano.m4a","It's beginning.m4a","its beginning 27.11.m4a","02 - It's beginning.mp3","02 - It's beginning (2022).mp3"]],["Jeg Så Mamma Kysse Nissen",["jeg så mamma kysse nissen sop2 tekst.png","Jeg så mamma kysse nissen.m4a","Mamma kysse nissen 1. alt.m4a","Mamma kysse nissen 2. Alt.m4a","Mamma kysse nissen 2.sopran.m4a","Mamma kysse nissen 1.sopran.m4a","01 - Jeg så mamma kysse nissen.mp3","01 - Jeg så mamma kysse nissen (1).mp3"]],["Jingle Bells",["Jingle Bells refreng A1.mp3","Jingle Bells refreng A2.mp3","Jingle Bells refreng S1.mp3","Jingle Bells refreng S2.mp3","Jinglebells 2sop med vokal.m4a","Jinglebells (bare melodi).pdf","Jingle Bells refreng.pdf"]],["Jul Jul Strålande Jul",["90 - Jul jul.mp3"]],["Jul, Jul, Strålande Jul",["Jul, jul, strålande jul (SOP1).mp3","Jul, jul, strålande jul (SOP2).mp3","Jul, jul, strålande jul (ALT).mp3","Jul, jul, strålande jul (ALLE).mp3","Jul Jul 2.stemme.m4a","Jul Jul Str.m4a","jul jul strålende jul (sop 1).aiff","jul, jul alt 2.m4a","Jul Jul midterste stemme.m4a","Jul, jul, strålande jul.pdf","Jul, jul, strålende jul (dynamikk-fokus) 08.11.2021.m4a"]],["Julemedley",["CAVA julemedley (1).aiff","Julemedley sop1 m.tekst.mp3","Julemedley.pdf","2.sop- Slutten Julemedleyen.m4a","Hele Julemedley.m4a","Julemedley 2.sop.m4a","Julemedley Alle.m4a","Julemedley Lilleborg Kirke.m4a","Julemedley seminar 2sop.m4a","Julemedley.m4a","Julemedley 16.09.2019.m4a"]],["La Det Sne i Eventyrland",["La-det-sne-i-Eventyrland (Page 1).png","La-det-sne-i-Eventyrland (Page 2).png","La-det-sne-i-Eventyrland (Page 3).png","La-det-sne-i-Eventyrland (Page 4).png","La-det-sne-i-Eventyrland (Page 5).png","La-det-sne-i-Eventyrland (Page 6).png","La-det-sne-i-Eventyrland (Page 7).png","La-det-sne-i-Eventyrland (Page 1).pdf","La-det-sne-i-Eventyrland.pdf","La Det Sne - Sop2.m4a","La det sne i Eventyrland 16.10.2021.m4a","Alt 1 La det sne_I Eventyrland.wav","Alt 2 La det sne_I Eventyrland.wav","Sopran 1 La det sne_I Eventyrland.wav","Sopran 2 La det sne_I Eventyrland.wav","04 - La Det Sne (halv opp).m4a","La det sne.m4a","La det sne (2022).m4a"]],["Leende Guldbruna Ögon",["Alt 1- Leende Guldbruna Ögon .mp3","Alt 2- Leende Guldbruna Ögon.mp3","Sopran 1- Leende Guldbruna Ögon .mp3","Sopran 2- Leende Guldbruna Ögon .mp3","Alle- Leende Guldbruna Ögon.mp3","Leende Guldbruna Ögon -med metronom og tamburin.mp3"]],["Mary Did You Know",["3 MaryDYK.m4a","Mary did you know.pdf","1 MaryDYK .m4a","2 MaryDYK.m4a","Mary did you know - Cava Style_1.m4a","4 MaryDYK.m4a"]],["Mitt Hjerte Alltid Vanker",["2sop notater mitt hjerte.pdf","Mitt hjerte alltid vanker sop 2.mp3","Mitt hjerte alltid vanker mørk solist.mp3","Mitt hjerte alltid vanker alt 2 (1).mp3","Mitt hjerte alltid vanker sop 1.mp3","Mitt hjerte alltid vanker alt 1.mp3","Mitt hjerte alltid vanker alt 2.mp3","Mitt hjerte 18.11.19.m4a","Mitt hjerte alltid vanker (gruppe) 03.11.2019.m4a"]],["Nordnorsk Julesalme",["Nordnorsk Julesalme text_oppsett.pdf","Nordnorsk julesalme alt 1.mp3","Nordnorsk julesalme sop 2 (2).mp3","Nordnorsk julesalme alt 2.mp3"," Nordnorsk julesalme 2sop.docx","Nordnorsk julesalme sop 1.mp3","Nordnorsk julesalme alle stemmer.mp3","Nordnorsk Julesalme 13.11.2017.m4a","Nordnorsk julesalme 11.10.2021.m4a","Nordnorsk julesalme 16.10.2021.m4a","Nordnorsk julesalme 01.11.2021.m4a"]],["Når Himmelen Faller Ned",["Når himmelen sop1alle.m4a","Når himmelen faller ned SCORE (Page 1).jpg","Når himmelen faller ned SCORE (Page 2).jpg","Når himmelen faller ned SCORE (Page 3).jpg","Når himmelen faller ned SCORE (Page 4).jpg","Når himmelen faller ned SCORE (Page 5).jpg","Når himmelen faller ned SCORE (Page 6).jpg","Når himmelen faller ned SCORE.pdf","Når hele himmelen faller ned 28.10.2019.m4a","Når hele himmelen faller ned 19.10.2020.m4a","Når himmelen faller ned 16.10.2021.m4a","1.sopran.mp3","alt1 A med alle.mp3","Når himmelen faller ned.mp3","2.sopran.mp3","2.alt.mp3","alt2 med alle.mp3","Sop1 med alle.mp3","sop2 med alle.mp3","alt1 B med alle.mp3","1.alt A (1).mp3","1.alt B.mp3","1.alt A.mp3","Når himmelen faller ned SCORE (Page 1).png","Når himmelen faller ned SCORE (Page 2).png","Når himmelen faller ned SCORE (Page 3).png","Når himmelen faller ned SCORE (Page 4).png","Når himmelen faller ned SCORE (Page 5).png","Når himmelen faller ned SCORE (Page 6).png","Himmelen faller ned.mp3","Himmelen faller ned.a.m. (1)-1.mp3","Når himmelen faller ned SCORE (NOT_JUL).pdf","Når himmelen faller ned SCORE 1.0.pdf","Når himmelen faller ned SCORE (1).pdf"]],["O Holy Night",["O Holy Night Alt-stemmen.m4a","Holy Night.m4a","O Holy Night.pdf","08 - O Holy Night.m4a","O Holy Night (NOT_JUL).pdf","Holly Night Hele.m4a","Holy Night Sop 2.m4a","O Holy Night Hele.m4a"]],["Rocking Around The Christmas Tree",["Rocking around Cava Sopran 2.mp3","Rocking around Cava Alt 1.mp3","Rocking around Cava Alt 2.mp3","Rocking around Cava med litt tamburin.mp3","Rocking around Cava Sopran 1.mp3","Rocking Around 16102017.m4a","Rocking Around the Christmas Tree - Alt 2.pdf","Rocking Around the Christmas Tree - Alt 1.pdf","Rocking Around the Christmas Tree - Full Score.pdf","Rocking Around the Christmas Tree - Sop 1.pdf","Rocking Around the Christmas Tree - Sop 2.pdf","Rocking Around the Christmas Tree - Tambourine.pdf","07 - Rocking around.m4a","10 - Rocking around.m4a"]],["Santa Baby",["._santa_baby_tenor.mp3","Santa_Baby_Alt1.mp3","santa_baby_tenor.mp3","Santa baby 2 alt eller noe.m4a","santa_baby_sopran.mp3","Santa Baby noter.pdf","Santa baby alt2 med piano.m4a","Santa Baby noter (NOT_JUL).pdf"]],["Santa Claus Got Stuck In My Chimney",["Santa alt 2.mp3","Santa Claus got stuck hele ryddet.mp3","Santa sopran 1.mp3","Santa sopran 2.mp3","Solist intro og outro.mp3","Santa alt 1.mp3","Stuck in my chimey sop2-2.png","Stuck in my chimey sop2-1.png","Santa Claus (tekst).pdf","06 - Santa Claus got stuck.mp3","Stuck in my chimey sop2-1 (NOT_JUL).png","Stuck in my chimey sop2-2 (NOT_JUL).png","Santa Claus (tekst) (NOT_JUL).pdf"]],["Santa Claus Is Coming To Town",["Santa claus cava alt 2.mp3","Santa claus cava alt 1.mp3","Santa claus cava.mp3","Santa claus cava sopran 1.mp3","Santa claus cava sopran 2.mp3","Santa claus cava med tamburin.mp3","Santa Claus (tekst).pdf"]],["Santa Lucia",["Santa_Lucia_S2.mp3","Santa Lucia s2.pdf","Santa Lucia s1.pdf","Santa Lucia - tekst.pdf","Santa Lucia 2sop med vokal.m4a","Santa Lucia - tekst (NOT_JUL).pdf","Santa Lucia s1 (NOT_JUL).pdf","Santa Lucia s2 (NOT_JUL).pdf"]],["Stemmen Din",["Stemmen din tekst ferdig.pdf","stemmen din FERDIG.pdf","Stemmen Din sop1.m4a","Alt.1 -35 og ut..m4a","Stemmen din_ferdig.mp3","Alt.1_Stemmen din_piano (ikke helt perfekt dessverre).m4a","Stemmen din_ferdig_uten_met.mp3","Stemmen din 2.sopran Linda (FEIL I NESTE SISTE TAKT).m4a"]],["Stjernesludd",["Stjernesludd alt 2.m4a","Stjernesludd solo.mp3","Stjernesludd.mp3","Stjernesludd.pdf","Aaaaa på stjernesludd.m4a","Stjernesludd A2.mp3","Stjernesludd S2.mp3","Stjernesludd S1.mp3","Stjernesludd A1.mp3","Stjernesludd alle.mp3","Stjernesludd (1).pdf","Stjernesludd 231017.m4a","Stjernesludd sop 2.m4a","Stjernesludd (1. alt, Marianne).m4a","Stjernesludd 2sop.m4a","Stjernesludd.m4a","05 - Stjernesludd.mp3","Stjernesludd (Jul 2022).m4a","Stjernesludd (NOT_JUL).pdf","Stjernesludd (NOT_JUL 1).pdf"]],["Vinter og Sne",["Vinter og sne sopran 2.mp3","Vinter og sne til cava alle stemmer.mp3","Vinter og sne alt 1.mp3","Vinter og sne alt 2.mp3","Vinter og sne sopran 1.mp3","Vinter og sne 30.09.2019.m4a"]],["White Christmas",["whitechristmas_sop1.mp3","white_christmas_alt1.mp3","whitechristmas_sop2.mp3","white_christmas_alt2.mp3","white_christmas.pdf","white_christmas (NOT_JUL).pdf"]]]};
+var STEMME = {"5 fine frøkner":[true,false],"A Natural Woman":[true,false],"Ain't No Other Man":[false,false],"Aliens (Her er jeg)":[true,false],"All About That Bass":[true,false],"All That Jazz":[true,false],"All You Need Is Love":[true,false],"Angel":[false,false],"Baby You're So Cool":[true,false],"Backbeat":[false,false],"Barnesangmedley":[true,false],"Be My Lover":[true,false],"Big Spender":[true,false],"Boogie Woogie Bugle Boy":[true,false],"Both Sides Now":[true,false],"Boys With Strawberry Sauce":[true,false],"Call Your Girlfriend":[true,false],"Candyman":[true,false],"Carry You Home (Fato)":[false,false],"CAVA-medley":[true,false],"Celebration":[true,true],"Close To You":[true,false],"Damned (Phone Joan)":[true,false],"Daughters":[true,false],"Den Fyrste Song":[true,false],"Diamonds":[true,false],"Dog Days Are Over":[true,false],"Don't Speak":[true,false],"Fade Away":[true,false],"Fever":[true,false],"Floden":[false,false],"Frida Strået":[false,false],"Føkk Lunsj":[true,false],"Fångad av en Stormvind":[true,true],"Girlband - Boyband Medley":[false,false],"Girl On Fire":[true,true],"Girls Just Wanna Have Fun":[true,false],"Girls Just Wanna Run The World":[true,false],"Go To Sleep You Little Baby":[true,false],"God Don't Leave Me":[true,false],"Gods Great Dust":[false,false],"Halo":[true,false],"Hello":[true,false],"Here Comes The Sun":[true,true],"Hit 'Em Up Style":[true,true],"Hit The Road Jack":[false,false],"Holding Out For A Hero":[true,false],"Honey Pie":[false,false],"Human":[true,true],"Hyperballad":[false,false],"I Mine Drømmer":[true,false],"If I Were A Boy":[true,false],"Intro (Vi har ei tulle - impro - Den fyrste song)":[true,false],"Ja Vi Elsker":[false,false],"Jag Kommer":[true,false],"Janie's Got A Gun":[true,false],"Jeg Vet":[true,false],"La Meg Være Ung":[true,false],"Locomotion":[true,false],"Love You Like That":[true,false],"Medley":[true,false],"Men Men":[false,false],"Mercy":[false,false],"Mitt Lille Land":[true,false],"My Heart Belongs To Daddy":[true,false],"My Love Is Your Love":[true,false],"Nature Boy":[true,false],"Never Ever":[true,false],"No Scrubs":[false,false],"Not Fair":[true,false],"Nothing Else Matters":[false,false],"Only Hollerback Girl (In The World)":[false,false],"Out Of Yourself":[false,false],"Perfekt":[true,false],"Pure Shores":[false,false],"Rabbit Hole (Phone Joan)":[false,false],"Right Now":[true,false],"Rolling In The Deep":[false,false],"Royals":[true,false],"Rumour Has It":[false,false],"Run The World (trommegroove)":[false,false],"Runnin'":[true,true],"Rövarsången":[true,true],"Set Me As A Seal":[true,false],"Sinnerman":[true,false],"Sir Duke":[true,false],"Slutte og Byne":[true,true],"Soltrall":[false,false],"Stop This Train":[false,false],"Sway":[false,false],"Teardrop":[true,false],"The Boy From Ipanema":[true,false],"The Look":[true,false],"The Second Time Around":[true,false],"Think":[true,false],"Try Again":[true,false],"Vårsøg":[false,false],"Wade In The Water":[false,false],"Whattaman":[false,false],"When You're Good To Mama":[true,false],"When Youre Good To Mama":[false,false],"You Don't Know Nothing":[false,false],"_ALLSANG":[false,false],"Talekor":[false,false],"All I Want For Christmas Is You":[true,true],"Carol Of The Bells":[true,false],"Carol of the Corona":[false,false],"Deilig er Jorden":[false,false],"Driving Home For Last Christmas":[true,true],"God Jul Igjen":[true,true],"God Rest Ye Merry Gentlemen":[false,false],"Hard To Be A Nissemann":[true,true],"Hark! The Herald Angels Sing":[false,false],"Home For Christmas":[true,false],"It's Beginning To Look Like Christmas":[true,false],"Jeg Så Mamma Kysse Nissen":[true,false],"Jingle Bells":[true,false],"Jul, Jul, Strålande Jul":[true,false],"Jul Jul Strålande Jul":[false,false],"Julemedley":[false,false],"La Det Sne i Eventyrland":[true,false],"Leende Guldbruna Ögon":[true,false],"Mary Did You Know":[false,false],"Mitt Hjerte Alltid Vanker":[true,false],"Nordnorsk Julesalme":[true,false],"Når Himmelen Faller Ned":[true,false],"O Holy Night":[false,false],"Rocking Around The Christmas Tree":[true,true],"Santa Baby":[false,false],"Santa Claus Got Stuck In My Chimney":[true,false],"Santa Claus Is Coming To Town":[true,false],"Santa Lucia":[false,true],"Stemmen Din":[false,false],"Stjernesludd":[true,false],"Vinter og Sne":[true,false],"White Christmas":[true,false]};
+
+var DB_HOME = "https://www.dropbox.com/home";
+var DB_PREVIEW = "https://www.dropbox.com/preview";
+var PATH_LAAT = "/Cava Felles/Ny mappestruktur ( under arbeid)/02- Lydfiler og noter";
+var PATH_JUL = PATH_LAAT + "/_JUL";
+
+function dbUrl(base, folder, file) {
+  return DB_PREVIEW + encodeURI(base + "/" + folder + "/" + file).replace(/#/g, "%23").replace(/\?/g, "%3F") + "?context=standalone_preview&role=personal";
+}
+function dbFolderUrl(base, folder) {
+  return DB_HOME + encodeURI(base + "/" + folder).replace(/#/g, "%23");
+}
+
+function esc(str) {
+  var d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+function isAudio(fn) {
+  var l = fn.toLowerCase();
+  return l.endsWith('.mp3') || l.endsWith('.m4a') || l.endsWith('.wav') || l.endsWith('.mp4') || l.endsWith('.aiff') || l.endsWith('.3ga');
+}
+function isNoter(fn) {
+  var l = fn.toLowerCase();
+  if (l.indexOf('tekst') >= 0) return false;
+  if (l.indexOf('ressursinfo') >= 0) return false;
+  return l.endsWith('.pdf') || l.endsWith('.png') || l.endsWith('.jpg') || l.endsWith('.jpeg');
+}
+function isTekst(fn) {
+  var l = fn.toLowerCase();
+  return l.indexOf('tekst') >= 0 || l.endsWith('.txt') || l.endsWith('.url');
+}
+
+function parseSongs(raw, type) {
+  var base = type === "jul" ? PATH_JUL : PATH_LAAT;
+  return raw.map(function(item) {
+    var navn = item[0], filer = item[1];
+    var noter = [], lyd = [], tekst = [], other = [];
+    filer.forEach(function(fn) {
+      var obj = { navn: fn, url: dbFolderUrl(base, navn) };
+      if (isTekst(fn)) { tekst.push(obj); }
+      else if (isNoter(fn)) { noter.push(obj); }
+      else if (isAudio(fn)) { lyd.push(obj); }
+      else { other.push(obj); }
+    });
+    var s = STEMME[navn] || [false,false];
+    return {
+      navn: navn, noter: noter, lyd: lyd, tekst: tekst, other: other,
+      mappeUrl: dbFolderUrl(base, navn),
+      harNoter: noter.length > 0, harLyd: lyd.length > 0, harTekst: tekst.length > 0,
+      stemmeLyd: s[0], stemmeNoter: s[1],
+    };
+  });
+}
+
+var DATA = { laater: parseSongs(RAW.l, "laat"), jul: parseSongs(RAW.j, "jul") };
+var currentTab = "laater";
+var activeFilters = {};
+var searchQuery = "";
+var selectedIndex = -1;
+
+function makeBadge(label, icon, bgColor, textColor, borderColor) {
+  return '<span class="badge inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-md border ' +
+    bgColor + ' ' + textColor + ' ' + borderColor + '">' +
+    '<i class="ph ' + icon + ' text-[9px]"></i>' + esc(label) + '</span>';
+}
+
+function songBadges(song) {
+  var b = '';
+  if (song.noter.length) b += makeBadge('Noter (' + song.noter.length + ')', 'ph-music-notes', 'bg-emerald-500/10', 'text-emerald-400', 'border-emerald-500/10');
+  if (song.lyd.length) b += makeBadge('\u00d8vingsfiler (' + song.lyd.length + ')', 'ph-speaker-high', 'bg-blue-500/10', 'text-blue-400', 'border-blue-500/10');
+  if (song.tekst.length) b += makeBadge('Tekst (' + song.tekst.length + ')', 'ph-text-aa', 'bg-amber-500/10', 'text-amber-400', 'border-amber-500/10');
+  if (song.other.length) b += makeBadge('Annet (' + song.other.length + ')', 'ph-file', 'bg-white/[0.04]', 'text-white/40', 'border-white/[0.04]');
+  if (song.stemmeLyd) b += makeBadge('Har stemmevise \u00f8vingsfiler', 'ph-users-three', 'bg-violet-500/10', 'text-violet-400', 'border-violet-500/10');
+  if (song.stemmeNoter) b += makeBadge('Har stemmevise noter', 'ph-music-notes-simple', 'bg-rose-500/10', 'text-rose-400', 'border-rose-500/10');
+  return b;
+}
+
+function renderCard(song, index) {
+  var totalFiles = song.noter.length + song.lyd.length + song.tekst.length + song.other.length;
+  var isSelected = index === selectedIndex;
+  var selClass = isSelected ? ' selected' : '';
+  return '<div class="song-card stagger-card rounded-2xl px-4 py-3.5 cursor-pointer border border-white/[0.04] bg-white/[0.025] flex items-start justify-between' + selClass + '" style="--i:' + Math.min(index, 20) + '" onclick="selectCard(' + index + ')" data-idx="' + index + '">' +
+    '<div class="flex-1 min-w-0">' +
+      '<div class="song-title text-sm font-semibold text-white/80 mb-1.5 truncate">' + esc(song.navn) + '</div>' +
+      '<div class="flex flex-wrap gap-1.5">' + songBadges(song) + '</div>' +
+    '</div>' +
+    '<div class="flex flex-col items-end pl-3 flex-shrink-0">' +
+      '<span class="file-count-num text-base font-bold text-white/15 tabular-nums leading-none">' + totalFiles + '</span>' +
+      '<i class="ph ph-caret-right card-chevron text-[10px] text-white/10 mt-1.5"></i>' +
+    '</div>' +
+  '</div>';
+}
+
+function fileIcon(fn) {
+  var low = fn.toLowerCase();
+  if (low.endsWith('.pdf')) return 'ph-file-pdf';
+  if (low.endsWith('.mp3') || low.endsWith('.m4a') || low.endsWith('.wav') || low.endsWith('.mp4') || low.endsWith('.aiff') || low.endsWith('.3ga')) return 'ph-play-circle';
+  if (low.endsWith('.png') || low.endsWith('.jpg') || low.endsWith('.jpeg')) return 'ph-file-image';
+  if (low.endsWith('.docx')) return 'ph-file-doc';
+  if (low.endsWith('.txt')) return 'ph-file-text';
+  return 'ph-file';
+}
+
+function fileIconColor(category) {
+  if (category === 'noter') return 'text-emerald-400';
+  if (category === 'lyd') return 'text-blue-400';
+  if (category === 'tekst') return 'text-amber-400';
+  return 'text-white/30';
+}
+
+function renderFileSection(files, title, dotColor, category) {
+  if (!files.length) return '';
+  var items = files.map(function(f) {
+    return '<a href="' + esc(f.url) + '" target="_blank" rel="noopener" class="file-item flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white/[0.03] cursor-pointer">' +
+      '<i class="ph ' + fileIcon(f.navn) + ' ' + fileIconColor(category) + ' text-sm"></i>' +
+      '<span class="text-[13px] text-white/60 font-light truncate">' + esc(f.navn) + '</span>' +
+    '</a>';
+  }).join('');
+  return '<div class="mb-5">' +
+    '<div class="flex items-center gap-2 mb-2">' +
+      '<div class="section-dot ' + dotColor + '"></div>' +
+      '<span class="text-[10px] font-bold text-white/30 uppercase tracking-widest">' + esc(title) + '</span>' +
+    '</div>' +
+    '<div class="flex flex-col gap-1">' + items + '</div>' +
+  '</div>';
+}
+
+function renderDetail(song) {
+  var totalFiles = song.noter.length + song.lyd.length + song.tekst.length + song.other.length;
+  var meta = totalFiles + ' filer';
+  if (song.stemmeLyd) meta += ' <span class="text-cava-400">&#183; Stemmevis \u00f8ving tilgjengelig</span>';
+  if (song.stemmeNoter) meta += ' <span class="text-rose-400">&#183; Stemmevise noter tilgjengelig</span>';
+
+  var detailBadges = '';
+  if (song.noter.length) detailBadges += '<span class="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/10"><i class="ph ph-music-notes text-[10px] mr-1"></i>Noter (' + song.noter.length + ')</span>';
+  if (song.lyd.length) detailBadges += '<span class="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/10"><i class="ph ph-speaker-high text-[10px] mr-1"></i>\u00d8vingsfiler (' + song.lyd.length + ')</span>';
+  if (song.tekst.length) detailBadges += '<span class="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/10"><i class="ph ph-text-aa text-[10px] mr-1"></i>Tekst (' + song.tekst.length + ')</span>';
+  if (song.other.length) detailBadges += '<span class="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-white/[0.06] text-white/40 border border-white/[0.04]"><i class="ph ph-file text-[10px] mr-1"></i>Annet (' + song.other.length + ')</span>';
+
+  var sections = '';
+  sections += renderFileSection(song.noter, 'Noter', 'bg-emerald-500/60', 'noter');
+  sections += renderFileSection(song.lyd, '\u00d8vingsfiler', 'bg-blue-500/60', 'lyd');
+  sections += renderFileSection(song.tekst, 'Tekst', 'bg-amber-500/60', 'tekst');
+  sections += renderFileSection(song.other, 'Annet', 'bg-white/20', 'other');
+
+  return '<div class="detail-enter flex flex-col h-full">' +
+    '<div class="mb-6 flex-shrink-0">' +
+      '<h2 class="text-2xl font-extrabold tracking-tight text-white mb-1">' + esc(song.navn) + '</h2>' +
+      '<p class="text-xs text-white/30 font-light">' + meta + '</p>' +
+      '<div class="flex flex-wrap gap-1.5 mt-3">' + detailBadges + '</div>' +
+    '</div>' +
+    '<div class="flex-1">' + sections + '</div>' +
+    '<div class="mt-4 flex-shrink-0 pt-4 border-t border-white/[0.04]">' +
+      '<a href="' + esc(song.mappeUrl) + '" target="_blank" rel="noopener" class="dropbox-link flex items-center justify-center gap-2 bg-cava-600/15 text-cava-400 text-sm font-semibold py-3 px-4 rounded-xl border border-cava-600/15">' +
+        '<i class="ph ph-arrow-square-out text-base"></i>\u00c5pne mappen i Dropbox</a>' +
+    '</div>' +
+  '</div>';
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  selectedIndex = -1;
+  var tL = document.getElementById("tabLaater");
+  var tJ = document.getElementById("tabJul");
+  tL.className = "tab-btn px-4 py-2 rounded-lg text-xs font-semibold transition-all " + (tab === "laater" ? "bg-cava-600/20 text-cava-400" : "text-white/30");
+  tJ.className = "tab-btn px-4 py-2 rounded-lg text-xs font-semibold transition-all " + (tab === "jul" ? "bg-cava-600/20 text-cava-400" : "text-white/30");
+  var mL = document.getElementById("tabLaaterMobile");
+  var mJ = document.getElementById("tabJulMobile");
+  if (mL) mL.className = "tab-btn-mobile px-3 py-1.5 rounded-md text-[11px] font-semibold transition-all " + (tab === "laater" ? "bg-cava-600/20 text-cava-400" : "text-white/30");
+  if (mJ) mJ.className = "tab-btn-mobile px-3 py-1.5 rounded-md text-[11px] font-semibold transition-all " + (tab === "jul" ? "bg-cava-600/20 text-cava-400" : "text-white/30");
+  var heroImg = document.getElementById("heroImg");
+  var heroTitle = document.getElementById("heroTitle");
+  var heroSub = document.getElementById("heroSub");
+  if (tab === "jul") {
+    heroImg.src = "img/hero-jul.jpg";
+    heroTitle.innerHTML = 'Jule<span class="text-cava-500">sanger</span>';
+    heroSub.textContent = "Alle julesangene til Cava \u2014 noter, \u00f8vingsfiler og tekst.";
+  } else {
+    heroImg.src = "img/hero.jpg";
+    heroTitle.innerHTML = 'Kor <span class="text-cava-500">Cava</span>';
+    heroSub.textContent = "Repertoar og ressurser i Dropbox";
+  }
+  document.getElementById("welcomeState").style.display = "flex";
+  document.getElementById("detailState").style.display = "none";
+  render();
+}
+
+function filterActiveClass(f) {
+  if (f === 'noter') return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+  if (f === 'lyd') return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+  if (f === 'tekst') return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+  return 'bg-white/[0.06] text-white/50 border-white/[0.08]';
+}
+
+function updateFilterChips() {
+  document.querySelectorAll('[data-filter]').forEach(function(btn) {
+    var f = btn.getAttribute('data-filter');
+    btn.className = 'filter-chip text-xs font-medium px-3 py-1.5 rounded-lg border ' + (activeFilters[f] ? filterActiveClass(f) : 'bg-white/[0.03] text-white/30 border-white/[0.06]');
+  });
+  document.querySelectorAll('[data-filter-m]').forEach(function(btn) {
+    var f = btn.getAttribute('data-filter-m');
+    btn.className = 'filter-chip text-[10px] font-medium px-2.5 py-1 rounded-lg border ' + (activeFilters[f] ? filterActiveClass(f) : 'bg-white/[0.03] text-white/30 border-white/[0.06]');
+  });
+}
+
+function toggleFilter(f) {
+  if (activeFilters[f]) { delete activeFilters[f]; }
+  else { activeFilters[f] = true; }
+  updateFilterChips();
+  render();
+}
+
+function getFiltered() {
+  var songs = DATA[currentTab];
+  if (searchQuery) {
+    var q = searchQuery.toLowerCase();
+    songs = songs.filter(function(s) { return s.navn.toLowerCase().indexOf(q) >= 0; });
+  }
+  if (activeFilters.noter) songs = songs.filter(function(s) { return s.harNoter; });
+  if (activeFilters.lyd) songs = songs.filter(function(s) { return s.harLyd; });
+  if (activeFilters.tekst) songs = songs.filter(function(s) { return s.harTekst; });
+  return songs;
+}
+
+function selectCard(idx) {
+  var songs = getFiltered();
+  if (idx < 0 || idx >= songs.length) return;
+  selectedIndex = idx;
+  var song = songs[idx];
+  document.querySelectorAll('.song-card').forEach(function(c) { c.classList.remove('selected'); });
+  var card = document.querySelector('.song-card[data-idx="' + idx + '"]');
+  if (card) card.classList.add('selected');
+  var detail = document.getElementById("detailState");
+  var welcome = document.getElementById("welcomeState");
+  welcome.style.display = "none";
+  detail.style.display = "flex";
+  detail.innerHTML = renderDetail(song);
+  if (window.innerWidth < 768) {
+    var overlay = document.getElementById("mobileDetail");
+    document.getElementById("mobileDetailTitle").textContent = song.navn;
+    document.getElementById("mobileDetailContent").innerHTML = renderDetail(song);
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+}
+
+function closeMobileDetail() {
+  document.getElementById("mobileDetail").classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function render() {
+  var songs = getFiltered();
+  var total = DATA[currentTab].length;
+  var showing = songs.length;
+  var countText = showing < total ? showing + " av " + total + " l\u00e5ter" : total + " l\u00e5ter";
+  var list = document.getElementById("cardList");
+  var empty = document.getElementById("emptyState");
+  document.getElementById("songCount").textContent = countText;
+  if (songs.length === 0) {
+    list.textContent = "";
+    empty.style.display = "flex";
+  } else {
+    empty.style.display = "none";
+    list.innerHTML = songs.map(function(s, i) { return renderCard(s, i); }).join("");
+    requestAnimationFrame(function() {
+      var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) { entry.target.classList.add("visible"); observer.unobserve(entry.target); }
+        });
+      }, { threshold: 0.05 });
+      list.querySelectorAll(".stagger-card").forEach(function(el) { observer.observe(el); });
+    });
+  }
+  var mList = document.getElementById("cardListMobile");
+  var mEmpty = document.getElementById("emptyStateMobile");
+  var mCount = document.getElementById("songCountMobile");
+  if (mCount) mCount.textContent = countText;
+  if (mList) {
+    if (songs.length === 0) {
+      mList.textContent = "";
+      if (mEmpty) mEmpty.classList.remove("hidden");
+    } else {
+      if (mEmpty) mEmpty.classList.add("hidden");
+      mList.innerHTML = songs.map(function(s, i) { return renderCard(s, i); }).join("");
+      requestAnimationFrame(function() {
+        var observer = new IntersectionObserver(function(entries) {
+          entries.forEach(function(entry) {
+            if (entry.isIntersecting) { entry.target.classList.add("visible"); observer.unobserve(entry.target); }
+          });
+        }, { threshold: 0.05 });
+        mList.querySelectorAll(".stagger-card").forEach(function(el) { observer.observe(el); });
+      });
+    }
+  }
+}
+
+document.getElementById("searchInput").addEventListener("input", function(e) {
+  searchQuery = e.target.value;
+  var mInput = document.getElementById("searchInputMobile");
+  if (mInput) mInput.value = searchQuery;
+  render();
+});
+var mSearchInput = document.getElementById("searchInputMobile");
+if (mSearchInput) {
+  mSearchInput.addEventListener("input", function(e) {
+    searchQuery = e.target.value;
+    document.getElementById("searchInput").value = searchQuery;
+    render();
+  });
+}
+
+gsap.registerPlugin(ScrollTrigger);
+gsap.to('#heroImg', {
+  y: '30%', scale: 1.15, ease: 'none',
+  scrollTrigger: { trigger: '#hero', start: 'top top', end: 'bottom top', scrub: true }
+});
+gsap.to('#scrollHint', {
+  opacity: 0, y: 20,
+  scrollTrigger: { trigger: '#hero', start: '20% top', end: '40% top', scrub: true }
+});
+
+switchTab('laater');
+updateFilterChips();
+render();
+</script>
+</body>
+</html>
