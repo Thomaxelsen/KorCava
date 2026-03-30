@@ -512,31 +512,6 @@ gsap.to('#scrollHint', {
   scrollTrigger: { trigger: '#hero', start: '20% top', end: '40% top', scrub: true }
 });
 
-// Lock card list scrolling until hero is fully out of view
-var cardScroll = document.getElementById('cardList');
-var detailPanel = document.getElementById('detailState');
-function unlockScroll() {
-  if (cardScroll) cardScroll.style.overflowY = 'auto';
-  if (detailPanel) detailPanel.style.overflowY = 'auto';
-}
-function lockScroll() {
-  if (cardScroll) cardScroll.style.overflowY = 'hidden';
-  if (detailPanel) detailPanel.style.overflowY = 'hidden';
-}
-// Check if hero is already scrolled past on load
-var heroEl = document.getElementById('hero');
-if (heroEl && heroEl.getBoundingClientRect().bottom <= 0) {
-  unlockScroll();
-} else {
-  lockScroll();
-}
-ScrollTrigger.create({
-  trigger: '#hero',
-  start: 'bottom top',
-  onEnter: unlockScroll,
-  onLeaveBack: lockScroll
-});
-
 switchTab('laater');
 updateFilterChips();
 render();
