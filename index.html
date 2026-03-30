@@ -34,7 +34,7 @@
     .detail-scroll::-webkit-scrollbar-track{background:transparent}
     .detail-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.06);border-radius:10px}
     .stagger-card{opacity:0;transform:translateY(16px)}
-    .stagger-card.visible{animation:cardIn 0.5s cubic-bezier(0.16,1,0.3,1) forwards;animation-delay:calc(var(--i)*60ms)}
+    .stagger-card.visible{animation:cardIn 0.4s cubic-bezier(0.16,1,0.3,1) forwards;animation-delay:calc(var(--i)*30ms)}
     @keyframes cardIn{to{opacity:1;transform:translateY(0)}}
     .song-card{transition:all 0.3s cubic-bezier(0.16,1,0.3,1)}
     .song-card:hover{background:rgba(255,255,255,0.06)}
@@ -271,7 +271,7 @@ function renderCard(song, index) {
   var totalFiles = song.noter.length + song.lyd.length + song.tekst.length + song.other.length;
   var isSelected = index === selectedIndex;
   var selClass = isSelected ? ' selected' : '';
-  return '<div class="song-card stagger-card rounded-2xl px-4 py-3.5 cursor-pointer border border-white/[0.04] bg-white/[0.025] flex items-start justify-between' + selClass + '" style="--i:' + Math.min(index, 20) + '" onclick="selectCard(' + index + ')" data-idx="' + index + '">' +
+  return '<div class="song-card stagger-card rounded-2xl px-4 py-3.5 cursor-pointer border border-white/[0.04] bg-white/[0.025] flex items-start justify-between' + selClass + '" style="--i:' + Math.min(index, 12) + '" onclick="selectCard(' + index + ')" data-idx="' + index + '">' +
     '<div class="flex-1 min-w-0">' +
       '<div class="song-title text-sm font-semibold text-white/80 mb-1.5 truncate">' + esc(song.navn) + '</div>' +
       '<div class="flex flex-wrap gap-1.5">' + songBadges(song) + '</div>' +
