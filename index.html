@@ -530,17 +530,23 @@ function toggleMatrixExpand(idx) {
   expandedMatrixRow = expandedMatrixRow === idx ? -1 : idx;
   renderMatrixTable();
   if (expandedMatrixRow >= 0) {
-    var row = document.querySelector('tr.m-row[data-midx="' + idx + '"]');
-    if (row) {
-      requestAnimationFrame(function() {
-        var scrollContainer = row.closest('.matrix-scroll');
-        if (scrollContainer) {
-          var rowTop = row.offsetTop;
-          var headerHeight = 60;
-          scrollContainer.scrollTo({ top: rowTop - headerHeight, behavior: 'smooth' });
+    requestAnimationFrame(function() {
+      // Find the visible table's row (desktop or mobile)
+      var tables = [document.getElementById('matrixTable'), document.getElementById('matrixTableMobile')];
+      for (var t = 0; t < tables.length; t++) {
+        if (!tables[t]) continue;
+        var row = tables[t].querySelector('tr.m-row[data-midx="' + idx + '"]');
+        if (row && row.offsetParent !== null) {
+          var scrollContainer = row.closest('.matrix-scroll');
+          if (scrollContainer) {
+            var rowTop = row.offsetTop;
+            var headerHeight = 60;
+            scrollContainer.scrollTo({ top: rowTop - headerHeight, behavior: 'smooth' });
+          }
+          break;
         }
-      });
-    }
+      }
+    });
   }
 }
 
